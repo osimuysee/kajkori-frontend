@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KajKori - কর্মী রেজিস্ট্রেশন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white shadow-md border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-bold text-blue-700 flex items-center gap-2">
+                <i class="fa-solid fa-briefcase text-orange-500"></i> কাজকরি (KajKori)
+            </a>
+            <a href="login.html" class="text-gray-700 hover:text-blue-700 font-bold text-sm px-3 py-2 rounded-lg transition border border-gray-200">
+                <i class="fa-solid fa-right-to-bracket text-blue-600"></i> লগইন
+            </a>
+        </div>
+    </header>
+
+    <main class="py-10 px-4 my-auto">
+        <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-xl border border-gray-200 p-6 md:p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">কর্মী হিসেবে অ্যাকাউন্ট তৈরি করুন</h1>
+                <p class="text-gray-600 text-sm mt-1">বিনামূল্যে রেজিস্ট্রেশন করে সার্ভিস শুরু করুন</p>
+            </div>
+
+            <form id="registerForm" class="space-y-5">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">পূর্ণ নাম *</label>
+                        <input type="text" id="fullName" required placeholder="যেমন: মোঃ রহিম উদ্দিন" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর *</label>
+                        <input type="tel" id="phone" required placeholder="017xxxxxxxx" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল *</label>
+                        <input type="email" id="email" required placeholder="example@mail.com" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">এনআইডি (NID) নম্বর *</label>
+                        <input type="text" id="nid" required placeholder="১০/১৩/১৭ ডিজিটের NID" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4 border-t pt-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">কাজের ধরন *</label>
+                        <select id="workerCategory" required class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                            <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+                            <option value="electrician">⚡ ইলেকট্রিশিয়ান</option>
+                            <option value="plumber">🚰 প্লাম্বার</option>
+                            <option value="ac_repair">❄️ এসি সার্ভিসিং</option>
+                            <option value="painter">🎨 রং মিস্ত্রি</option>
+                            <option value="carpenter">🪑 কাঠ মিস্ত্রি</option>
+                            <option value="cleaner">🧹 পরিচ্ছন্নতা কর্মী</option>
+                            <option value="cook">🍳 বাবুর্চি</option>
+                            <option value="driver">🚗 ড্রাইভার</option>
+                            <option value="tutor">📚 হোম টিউটর</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">সর্বনিম্ন ভিজিট ফি (টাকায়) *</label>
+                        <input type="number" id="perTaskCharge" min="0" required placeholder="যেমন: ৩০০" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-3"><i class="fa-solid fa-user-shield"></i> ছবি ও ডকুমেন্টস</p>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div class="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">নিজের স্পষ্ট ছবি *</label>
+                            <input type="file" id="profileImage" accept="image/*" required class="block w-full text-xs text-gray-500">
+                        </div>
+
+                        <div class="bg-gray-50 p-3 rounded-lg border border-dashed border-gray-300">
+                            <label class="block text-xs font-bold text-gray-700 mb-1">NID কার্ডের ছবি *</label>
+                            <input type="file" id="nidDocument" accept="image/*,.pdf" required class="block w-full text-xs text-gray-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-3"><i class="fa-solid fa-location-dot"></i> ঠিকানা</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                            <select id="regDivision" required class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-xs md:text-sm outline-none">
+                                <option value="">বিভাগ</option>
+                                <option value="dhaka">ঢাকা</option>
+                                <option value="chittagong">চট্টগ্রাম</option>
+                                <option value="rajshahi">রাজশাহী</option>
+                                <option value="khulna">খুলনা</option>
+                                <option value="barisal">বরিশাল</option>
+                                <option value="sylhet">সিলেট</option>
+                                <option value="rangpur">রংপুর</option>
+                                <option value="mymensingh">ময়মনসিংহ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="regDistrict" required class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-xs md:text-sm outline-none">
+                                <option value="">জেলা</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="regUpazila" required class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-xs md:text-sm outline-none">
+                                <option value="">উপজেলা</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="text" id="regVillage" required placeholder="গ্রাম/মহল্লা" class="w-full p-2 bg-gray-50 border border-gray-300 rounded-lg text-xs md:text-sm outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4 border-t pt-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">পাসওয়ার্ড *</label>
+                        <input type="password" id="regPassword" minlength="6" required placeholder="••••••••" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">পাসওয়ার্ড নিশ্চিত করুন *</label>
+                        <input type="password" id="confirmPassword" minlength="6" required placeholder="••••••••" class="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 rounded-lg text-base shadow-md transition mt-4">
+                    রেজিস্ট্রেশন সম্পূর্ণ করুন
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="bg-gray-900 text-gray-400 py-6 px-4 text-center text-xs border-t border-gray-800">
+        <p class="text-white font-bold text-sm mb-1">কাজকরি (KajKori)</p>
+        <p>© ২০২৬ KajKori. সর্বস্বত্ব সংরক্ষিত।</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXD9-SYAqnmatYe81M9wBeSB4wjJGFAZQ",
+            authDomain: "kajkori-8a07e.firebaseapp.com",
+            databaseURL: "https://kajkori-8a07e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kajkori-8a07e",
+            storageBucket: "kajkori-8a07e.firebasestorage.app",
+            messagingSenderId: "594029245687",
+            appId: "1:594029245687:web:d2364820ce6be9d4104ff2"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const pass = document.getElementById('regPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if(pass !== confirmPass) {
+                alert("পাসওয়ার্ড দুটি মিলছে না!");
+                return;
+            }
+
+            const rawPhone = document.getElementById('phone').value.trim();
+            const formattedPhone = sanitizePhoneNumber(rawPhone);
+            const nidNumber = document.getElementById('nid').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = "অ্যাকোউন্ট তৈরি ও ফাইল আপলোড হচ্ছে...";
+
+            try {
+                // ১. ডুপ্লিকেট NID চেক
+                const nidQuery = await db.collection("workers").where("nid", "==", nidNumber).get();
+                if (!nidQuery.empty) {
+                    alert("⚠️ এই এনআইডি (NID) ইতিমধ্যেই ব্যবহৃত হয়েছে!");
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "রেজিস্ট্রেশন সম্পূর্ণ করুন";
+                    return;
+                }
+
+                // ২. Firebase Auth-এ ইউজার সৃষ্টি
+                const userCred = await auth.createUserWithEmailAndPassword(email, pass);
+                const uid = userCred.user.uid;
+
+                // ৩. ফাইল আপলোড (Storage)
+                let profileImageUrl = "";
+                let nidDocumentUrl = "";
+
+                const profileFile = document.getElementById('profileImage').files[0];
+                const nidFile = document.getElementById('nidDocument').files[0];
+
+                if (profileFile) {
+                    const profileRef = storage.ref(`workers/${uid}/profile_${Date.now()}_${profileFile.name}`);
+                    const snap = await profileRef.put(profileFile);
+                    profileImageUrl = await snap.ref.getDownloadURL();
+                }
+
+                if (nidFile) {
+                    const nidRef = storage.ref(`workers/${uid}/nid_${Date.now()}_${nidFile.name}`);
+                    const snap = await nidRef.put(nidFile);
+                    nidDocumentUrl = await snap.ref.getDownloadURL();
+                }
+
+                // ৪. Firestore-এ সেভ
+                await db.collection("workers").doc(uid).set({
+                    uid: uid,
+                    fullName: document.getElementById('fullName').value,
+                    phone: formattedPhone,
+                    email: email,
+                    nid: nidNumber,
+                    category: document.getElementById('workerCategory').value,
+                    perTaskCharge: document.getElementById('perTaskCharge').value,
+                    division: document.getElementById('regDivision').value,
+                    district: document.getElementById('regDistrict').value,
+                    upazila: document.getElementById('regUpazila').value,
+                    village: document.getElementById('regVillage').value,
+                    profileImageUrl: profileImageUrl,
+                    nidDocumentUrl: nidDocumentUrl,
+                    status: "pending",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert("আপনার রেজিস্ট্রেশন সফল হয়েছে! তথ্য যাচাই করার পরে এডমিন অ্যাকাউন্ট সক্রিয় করবে।");
+                window.location.href = "login.html";
+
+            } catch (error) {
+                console.error("Registration Error:", error);
+                alert("ত্রুটি: " + error.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = "রেজিস্ট্রেশন সম্পূর্ণ করুন";
+            }
+        });
+    </script>
+</body>
+</html>

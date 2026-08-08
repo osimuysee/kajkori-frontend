@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KajKori - এডমিন প্যানেল</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 min-h-screen">
+
+    <header class="bg-gray-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="admin.html" class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-orange-500"></i> কাজকরি এডমিন প্যানেল
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-200 px-3 py-2 rounded-lg border border-gray-700 transition">
+                    <i class="fa-solid fa-globe"></i> মূল ওয়েবসাইট
+                </a>
+                <button onclick="logoutAdmin()" class="text-xs bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-bold transition">
+                    লগআউট
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 font-bold uppercase">মোট আবেদন</p>
+                    <h3 id="statTotal" class="text-2xl font-bold text-gray-800 mt-1">০</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 text-xl">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-orange-500 font-bold uppercase">অপেক্ষমাণ (Pending)</p>
+                    <h3 id="statPending" class="text-2xl font-bold text-orange-600 mt-1">০</h3>
+                </div>
+                <div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-600 text-xl">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-green-600 font-bold uppercase">অনুমোদিত (Approved)</p>
+                    <h3 id="statApproved" class="text-2xl font-bold text-green-600 mt-1">০</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600 text-xl">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div class="flex gap-2">
+                <button onclick="filterWorkers('all')" id="btnAll" class="px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition">সবগুলো</button>
+                <button onclick="filterWorkers('pending')" id="btnPending" class="px-4 py-2 text-xs font-bold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">অপেক্ষমাণ</button>
+                <button onclick="filterWorkers('approved')" id="btnApproved" class="px-4 py-2 text-xs font-bold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">অনুমোদিত</button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div class="p-4 border-b bg-gray-50">
+                <h2 class="font-bold text-gray-800 text-sm md:text-base"><i class="fa-solid fa-list-check text-blue-600"></i> কর্মীদের আবেদনের তালিকা</h2>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs md:text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 border-b text-gray-600 uppercase font-bold text-[11px]">
+                            <th class="p-3">ছবি ও নাম</th>
+                            <th class="p-3">যোগাযোগ</th>
+                            <th class="p-3">NID ও ডকুমেন্ট</th>
+                            <th class="p-3">ক্যাটাগরি ও ফি</th>
+                            <th class="p-3">ঠিকানা</th>
+                            <th class="p-3">স্ট্যাটাস</th>
+                            <th class="p-3 text-center">অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="workersTableBody" class="divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="7" class="text-center py-8 text-gray-500 font-bold">
+                                <i class="fa-solid fa-spinner fa-spin text-xl text-blue-600"></i><br>ডাটা লোড হচ্ছে...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXD9-SYAqnmatYe81M9wBeSB4wjJGFAZQ",
+            authDomain: "kajkori-8a07e.firebaseapp.com",
+            databaseURL: "https://kajkori-8a07e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kajkori-8a07e",
+            storageBucket: "kajkori-8a07e.firebasestorage.app",
+            messagingSenderId: "594029245687",
+            appId: "1:594029245687:web:d2364820ce6be9d4104ff2"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ⚠️ আপনার আসল এডমিন ইমেইলটি এখানে বসিয়ে দিন
+        const ADMIN_EMAIL = "apurboantor3@gmail.com";
+
+        let allWorkersList = [];
+        let currentFilter = 'all';
+
+        // ১. কড়া এডমিন অথোন্টিকেশন ও সিকিউরিটি চেক
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                alert("এডমিন প্যানেলে প্রবেশ করতে প্রথমে লগইন করুন!");
+                window.location.href = "login.html";
+            } else if (user.email !== ADMIN_EMAIL) {
+                alert("⚠️ আপনার এই পেজে প্রবেশের অনুমতি নেই!");
+                window.location.href = "index.html";
+            } else {
+                listenRealtimeWorkers();
+            }
+        });
+
+        function logoutAdmin() {
+            auth.signOut().then(() => window.location.href = "login.html");
+        }
+
+        // ২. Realtime Listener (onSnapshot)
+        function listenRealtimeWorkers() {
+            db.collection("workers").onSnapshot(snapshot => {
+                allWorkersList = [];
+                let total = 0, pending = 0, approved = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    data.id = doc.id;
+                    allWorkersList.push(data);
+
+                    total++;
+                    if (data.status === 'approved') approved++;
+                    else pending++;
+                });
+
+                document.getElementById('statTotal').innerText = total;
+                document.getElementById('statPending').innerText = pending;
+                document.getElementById('statApproved').innerText = approved;
+
+                renderWorkersTable();
+            }, error => {
+                console.error("Fetch error:", error);
+            });
+        }
+
+        function renderWorkersTable() {
+            const tableBody = document.getElementById('workersTableBody');
+            tableBody.innerHTML = '';
+
+            const filteredData = allWorkersList.filter(worker => {
+                if (currentFilter === 'pending') return worker.status !== 'approved';
+                if (currentFilter === 'approved') return worker.status === 'approved';
+                return true;
+            });
+
+            if (filteredData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-gray-400 font-bold">কোনো ডাটা পাওয়া যায়নি</td></tr>`;
+                return;
+            }
+
+            filteredData.forEach(worker => {
+                const statusBadge = worker.status === 'approved' 
+                    ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-[10px] font-bold border border-green-300">অনুমোদিত</span>`
+                    : `<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-[10px] font-bold border border-orange-300">অপেক্ষমাণ</span>`;
+
+                const actionBtns = worker.status === 'approved'
+                    ? `<button onclick="updateWorkerStatus('${worker.id}', 'pending')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-3 py-1.5 rounded-lg text-xs transition">বাতিল</button>`
+                    : `<button onclick="updateWorkerStatus('${worker.id}', 'approved')" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-sm">অনুমোদন</button>`;
+
+                const profilePhoto = worker.profileImageUrl ? `<a href="${worker.profileImageUrl}" target="_blank"><img src="${worker.profileImageUrl}" class="w-8 h-8 rounded-full object-cover border"></a>` : '';
+                const nidDoc = worker.nidDocumentUrl ? `<a href="${worker.nidDocumentUrl}" target="_blank" class="text-blue-600 underline font-bold text-xs"><i class="fa-solid fa-file-image"></i> ডকুমেন্ট দেখুন</a>` : 'N/A';
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 flex items-center gap-2">
+                        ${profilePhoto}
+                        <div>
+                            <p class="font-bold text-gray-900">${worker.fullName || 'নাম নেই'}</p>
+                            <p class="text-[11px] text-gray-500">${worker.email || 'ইমেইল নেই'}</p>
+                        </div>
+                    </td>
+                    <td class="p-3 font-semibold text-gray-700">${worker.phone || 'N/A'}</td>
+                    <td class="p-3">
+                        <p class="font-mono font-bold text-gray-800">${worker.nid || 'N/A'}</p>
+                        ${nidDoc}
+                    </td>
+                    <td class="p-3">
+                        <span class="font-bold text-blue-700 capitalize">${worker.category || 'N/A'}</span>
+                        <p class="text-[11px] text-gray-600 font-bold">৳ ${worker.perTaskCharge || '0'}</p>
+                    </td>
+                    <td class="p-3 text-xs text-gray-600">
+                        ${worker.village ? worker.village + ', ' : ''}${worker.upazila || ''}, ${worker.district || ''}
+                    </td>
+                    <td class="p-3">${statusBadge}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            ${actionBtns}
+                            <button onclick="deleteWorker('${worker.id}')" class="bg-red-100 hover:bg-red-200 text-red-600 font-bold px-2 py-1.5 rounded-lg text-xs transition"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        async function updateWorkerStatus(id, newStatus) {
+            try {
+                await db.collection("workers").doc(id).update({
+                    status: newStatus,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (error) {
+                alert("আপডেট ব্যর্থ: " + error.message);
+            }
+        }
+
+        async function deleteWorker(id) {
+            if (confirm("আপনি কি নিশ্চিতভাবে এই ডাটা মুছে ফেলতে চান?")) {
+                try {
+                    await db.collection("workers").doc(id).delete();
+                } catch (error) {
+                    alert("ডিলিট করতে ব্যর্থ: " + error.message);
+                }
+            }
+        }
+
+        function filterWorkers(type) {
+            currentFilter = type;
+            document.querySelectorAll('#btnAll, #btnPending, #btnApproved').forEach(btn => {
+                btn.className = "px-4 py-2 text-xs font-bold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition";
+            });
+            
+            if (type === 'all') document.getElementById('btnAll').className = "px-4 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white transition";
+            if (type === 'pending') document.getElementById('btnPending').className = "px-4 py-2 text-xs font-bold rounded-lg bg-orange-500 text-white transition";
+            if (type === 'approved') document.getElementById('btnApproved').className = "px-4 py-2 text-xs font-bold rounded-lg bg-green-600 text-white transition";
+
+            renderWorkersTable();
+        }
+    </script>
+</body>
+</html>

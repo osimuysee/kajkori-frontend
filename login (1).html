@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KajKori - লগইন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col justify-between">
+
+    <header class="bg-white shadow-md border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-bold text-blue-700"><i class="fa-solid fa-briefcase text-orange-500"></i> কাজকরি</a>
+            <a href="register.html" class="bg-blue-600 text-white font-bold text-sm px-4 py-2 rounded-lg">রেজিস্ট্রেশন</a>
+        </div>
+    </header>
+
+    <main class="py-10 px-4 my-auto">
+        <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl border p-6 md:p-8">
+            <h1 class="text-2xl font-bold text-center text-gray-900 mb-6">অ্যাকোউন্টে লগইন করুন</h1>
+
+            <!-- Email & Password Login Form -->
+            <form id="emailLoginForm" class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল ঠিকানা</label>
+                    <input type="email" id="loginEmail" required placeholder="example@mail.com" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">পাসওয়ার্ড</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none">
+                </div>
+                <button type="submit" id="loginSubmitBtn" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg text-sm hover:bg-blue-700 transition">
+                    ইমেইল দিয়ে লগইন করুন
+                </button>
+            </form>
+
+            <div class="flex items-center my-4">
+                <div class="flex-grow border-t"></div>
+                <span class="px-3 text-xs text-gray-400 font-bold uppercase">অথবা</span>
+                <div class="flex-grow border-t"></div>
+            </div>
+
+            <!-- Google Sign In -->
+            <button id="googleLoginBtn" class="w-full bg-white hover:bg-gray-50 text-gray-700 border font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center gap-3 shadow-sm mb-4">
+                <i class="fa-brands fa-google text-red-500 text-base"></i> Google দিয়ে সাইন ইন করুন
+            </button>
+
+            <!-- Phone Form -->
+            <form id="phoneLoginForm" class="space-y-4 border-t pt-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর দিয়ে ওটিপি (OTP) সাইন ইন</label>
+                    <input type="tel" id="phoneNumber" placeholder="017xxxxxxxx" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none">
+                </div>
+
+                <div id="recaptcha-container" class="my-2"></div>
+
+                <button type="button" id="sendOtpBtn" class="w-full bg-gray-800 text-white font-bold py-2.5 rounded-lg text-sm">ওটিপি পাঠান</button>
+
+                <div id="otpSection" class="hidden space-y-3 border-t pt-4">
+                    <label class="block text-xs font-bold text-gray-700">৬ ডিজিটের ওটিপি দিন</label>
+                    <input type="text" id="otpCode" placeholder="xxxxxx" maxlength="6" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm text-center font-bold outline-none">
+                    <button type="button" id="verifyOtpBtn" class="w-full bg-orange-500 text-white font-bold py-2.5 rounded-lg text-sm">ভেরিফাই ও লগইন</button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXD9-SYAqnmatYe81M9wBeSB4wjJGFAZQ",
+            authDomain: "kajkori-8a07e.firebaseapp.com",
+            databaseURL: "https://kajkori-8a07e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kajkori-8a07e",
+            storageBucket: "kajkori-8a07e.firebasestorage.app",
+            messagingSenderId: "594029245687",
+            appId: "1:594029245687:web:d2364820ce6be9d4104ff2"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // ইতোমধ্যে লগইন থাকলে হোমপেজে রিডাইরেক্ট
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                window.location.href = "index.html";
+            }
+        });
+
+        // ইমেইল লগইন
+        document.getElementById('emailLoginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginSubmitBtn');
+
+            btn.innerText = "যাচাই করা হচ্ছে...";
+            btn.disabled = true;
+
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    window.location.href = "index.html";
+                })
+                .catch(err => {
+                    alert("লগইন ব্যর্থ: " + err.message);
+                    btn.innerText = "ইমেইল দিয়ে লগইন করুন";
+                    btn.disabled = false;
+                });
+        });
+
+        // Google Sign-In
+        document.getElementById('googleLoginBtn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(() => window.location.href = "index.html")
+                .catch(err => alert("গুগল লগইন এরর: " + err.message));
+        });
+
+        // Phone Auth
+        window.addEventListener('DOMContentLoaded', () => {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+                'size': 'invisible'
+            });
+        });
+
+        let confirmationResultObj = null;
+        document.getElementById('sendOtpBtn').addEventListener('click', () => {
+            const phoneInput = document.getElementById('phoneNumber').value.trim();
+            const phone = sanitizePhoneNumber(phoneInput);
+
+            if(!phoneInput) return alert("নম্বর লিখুন");
+
+            auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
+                .then(result => {
+                    confirmationResultObj = result;
+                    document.getElementById('otpSection').classList.remove('hidden');
+                    document.getElementById('sendOtpBtn').classList.add('hidden');
+                })
+                .catch(err => {
+                    alert("OTP পাঠাতে ব্যর্থ: " + err.message);
+                    if (window.grecaptcha) window.grecaptcha.reset();
+                });
+        });
+
+        document.getElementById('verifyOtpBtn').addEventListener('click', () => {
+            const code = document.getElementById('otpCode').value.trim();
+            if(confirmationResultObj && code) {
+                confirmationResultObj.confirm(code)
+                    .then(() => window.location.href = "index.html")
+                    .catch(() => alert("ভুল ওটিপি!"));
+            }
+        });
+    </script>
+</body>
+</html>
