@@ -346,3 +346,312 @@ function loadUserActivity(uid) {
 ১. কোনো ইউজার যখন জিমেইল দিয়ে সাইন-ইন করবে, তখন Google এর নিয়ম অনুযায়ী তার জিমেইলের প্রোফাইল পিকচার ফায়ারবেস স্বয়ংক্রিয়ভাবে user.photoURL-এ সেভ করে নেয়।
 ২. জাভাস্ক্রিপ্ট কোডটি ওই photoURL রিড করে প্রোফাইল পেজের গোল ইমেজ ট্যাগটিতে বসিয়ে দেয়। ফলে ছবি ম্যানুয়ালি আপলোড ছাড়াই জিমেইলের ছবি শো করবে।
 কোডগুলো আপনার প্রোজেক্টে বসিয়ে ট্রাই করুন। কোনো কনফিউশন থাকলে আমাকে বলতে পারেন!
+
+
+
+
+
+
+
+
+
+M:-
+আপনার প্রজেক্টের পরবর্তী প্রধান এবং সবচেয়ে গুরুত্বপূর্ণ ধাপ হলো কর্মী রেজিস্ট্রেশন পেজ (register.html) তৈরি করা।
+যেহেতু আপনার হোমপেজে কর্মী দেখানোর ব্যবস্থা আছে এবং এডমিন প্যানেলে কর্মী এপ্রুভ করার ব্যবস্থা আছে, তাই এখন নতুন কর্মীদের ডেটা সংগ্রহ করার ব্যবস্থা তৈরি করতে হবে।
+পরবর্তী টাস্ক লিস্ট (Roadmap)
+১. কর্মী রেজিস্ট্রেশন পেজ (register.html) তৈরি ও Firebase Storage সেটআপ
+ * ফর্ম ফিল্ডস: নাম, ফোন নম্বর, NID নম্বর, ক্যাটাগরি, চার্জ, বিভাগ/জেলা/উপজেলা (যা locations.js থেকে আসবে)।
+ * ছবি আপলোড: প্রোফাইল ছবি এবং NID কার্ডের ছবি নির্বাচন করার অপশন।
+ * Firebase Storage: ছবি দুটি ফায়ারবেস স্টোরেজে আপলোড করে লিঙ্ক দুটি Firestore-এ সেভ করা (status: "pending" হিসেবে)।
+২. ডুপ্লিকেট NID ব্লক করার লজিক (Duplicate NID Prevention)
+ * সাবমিট বাটনে ক্লিক করলে কোড চেক করবে এই NID দিয়ে আগে কেউ আবেদন করেছে কি না। থাকলে ফর্ম সাবমিট হবে না।
+৩. SweetAlert2 ইউজার নোটিফিকেশন
+ * ব্রাউজারের সাধারণ alert() তুলে দিয়ে সুন্দর ও ডিজিটাল পপআপ ডায়ালগ মেসেজ যুক্ত করা।
+register.html ফোল্ডারে যুক্ত করার জন্য কোড টেমপ্লেট
+আপনার প্রজেক্ট ফোল্ডারে register.html নামে একটি ফাইল তৈরি করে নিচের কোডটি বসিয়ে নিতে পারেন:
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KajKori - কর্মী হিসেবে নিবন্ধন করুন</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+
+    <!-- SweetAlert2 (Popups) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- 📍 বাংলাদেশের ৬৪ জেলা ও উপজেলার ডাটা ফাইল -->
+    <script src="locations.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <header class="bg-white shadow-md border-b">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="index.html" class="text-2xl font-bold text-blue-700 flex items-center gap-2">
+                <i class="fa-solid fa-briefcase text-orange-500"></i> কাজকরি (KajKori)
+            </a>
+            <a href="index.html" class="text-gray-700 hover:text-blue-700 font-bold text-sm px-3 py-2 rounded-lg border hover:bg-gray-50 flex items-center gap-1.5">
+                <i class="fa-solid fa-house text-blue-600"></i> হোম পেজ
+            </a>
+        </div>
+    </header>
+
+    <main class="flex-grow py-10 px-4">
+        <div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl border border-gray-200">
+            <h2 class="text-2xl font-bold text-center text-gray-900 mb-2">কর্মী হিসেবে রেজিস্ট্রেশন করুন</h2>
+            <p class="text-center text-gray-600 text-sm mb-6">আপনার তথ্য দিয়ে আবেদন জমা দিন। এডমিন ভেরিফাই করলে আপনার প্রোফাইল লাইভ হবে।</p>
+
+            <form id="registerForm" class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">পূর্ণ নাম *</label>
+                        <input type="text" id="fullName" required placeholder="যেমন: মো: রহিম উদ্দিন" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর *</label>
+                        <input type="tel" id="phone" required placeholder="017XXXXXXXX" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">জাতীয় পরিচয়পত্র (NID) নম্বর *</label>
+                        <input type="number" id="nid" required placeholder="১০ বা ১৭ ডিজিটের NID নম্বর" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">কাজের ধরন (ক্যাটাগরি) *</label>
+                        <select id="category" required class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">ক্যাটাগরি সিলেক্ট করুন</option>
+                            <option value="electrician">⚡ ইলেকট্রিশিয়ান</option>
+                            <option value="plumber">🚰 প্লাম্বার / পাইপ মিস্ত্রি</option>
+                            <option value="ac_repair">❄️ এসি / ফ্রিজ সার্ভিসিং</option>
+                            <option value="painter">🎨 রং মিস্ত্রি</option>
+                            <option value="carpenter">🪑 কাঠ মিস্ত্রি</option>
+                            <option value="tiles_mason">🧱 রাজমিস্ত্রি / টাইস মিস্ত্রি</option>
+                            <option value="cleaner">🧹 পরিচ্ছন্নতা কর্মী</option>
+                            <option value="cook">🍳 বাবুর্চি</option>
+                            <option value="driver">🚗 ড্রাইভার</option>
+                            <option value="tutor">📚 হোম টিউটর</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-1">প্রতি কাজের চার্জ (টাকায়) *</label>
+                    <input type="number" id="perTaskCharge" required placeholder="যেমন: ৫০০" class="w-full p-2.5 bg-gray-50 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="border-t pt-4">
+                    <p class="text-xs font-bold text-blue-700 uppercase mb-3"><i class="fa-solid fa-location-dot"></i> আপনার ঠিকানা</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div>
+                            <select id="division" required class="w-full p-2 bg-gray-50 border rounded-lg text-xs outline-none">
+                                <option value="">বিভাগ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="district" required class="w-full p-2 bg-gray-50 border rounded-lg text-xs outline-none">
+                                <option value="">জেলা</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="upazila" required class="w-full p-2 bg-gray-50 border rounded-lg text-xs outline-none">
+                                <option value="">উপজেলা</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="text" id="village" placeholder="গ্রাম / মহল্লা" class="w-full p-2 bg-gray-50 border rounded-lg text-xs outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4 grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">প্রোফাইল ছবি আপলোড করুন</label>
+                        <input type="file" id="profileImage" accept="image/*" class="w-full text-xs p-2 bg-gray-50 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">NID কার্ডের ছবি আপলোড করুন</label>
+                        <input type="file" id="nidImage" accept="image/*" class="w-full text-xs p-2 bg-gray-50 border rounded-lg">
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-base shadow-md transition flex items-center justify-center gap-2 mt-6">
+                    <i class="fa-solid fa-paper-plane"></i> আবেদন সাবমিট করুন
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXD9-SYAqnmatYe81M9wBeSB4wjJGFAZQ",
+            authDomain: "kajkori-8a07e.firebaseapp.com",
+            databaseURL: "https://kajkori-8a07e-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "kajkori-8a07e",
+            storageBucket: "kajkori-8a07e.firebasestorage.app",
+            messagingSenderId: "594029245687",
+            appId: "1:594029245687:web:d2364820ce6be9d4104ff2"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // 📍 ড্রপডাউন সেটআপ
+        document.addEventListener('DOMContentLoaded', function() {
+            const divisionSelect = document.getElementById('division');
+            const districtSelect = document.getElementById('district');
+            const upazilaSelect = document.getElementById('upazila');
+
+            if (typeof bdGeoData !== 'undefined') {
+                for (const divKey in bdGeoData) {
+                    const opt = document.createElement('option');
+                    opt.value = divKey;
+                    opt.innerText = bdGeoData[divKey].name;
+                    divisionSelect.appendChild(opt);
+                }
+
+                divisionSelect.addEventListener('change', function() {
+                    districtSelect.innerHTML = '<option value="">জেলা</option>';
+                    upazilaSelect.innerHTML = '<option value="">উপজেলা</option>';
+                    if (this.value && bdGeoData[this.value]) {
+                        for (const distKey in bdGeoData[this.value].districts) {
+                            const opt = document.createElement('option');
+                            opt.value = distKey;
+                            opt.innerText = bdGeoData[this.value].districts[distKey].name;
+                            districtSelect.appendChild(opt);
+                        }
+                    }
+                });
+
+                districtSelect.addEventListener('change', function() {
+                    upazilaSelect.innerHTML = '<option value="">উপজেলা</option>';
+                    const div = divisionSelect.value;
+                    if (div && this.value && bdGeoData[div]?.districts[this.value]) {
+                        bdGeoData[div].districts[this.value].upazilas.forEach(upazilaName => {
+                            const opt = document.createElement('option');
+                            opt.value = upazilaName;
+                            opt.innerText = upazilaName;
+                            upazilaSelect.appendChild(opt);
+                        });
+                    }
+                });
+            }
+        });
+
+        // 📝 আবেদন সাবমিট লজিক
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const nid = document.getElementById('nid').value.trim();
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> প্রসেসিং হচ্ছে...`;
+
+            try {
+                // ১. ডুপ্লিকেট NID চেক
+                const checkNid = await db.collection("workers").where("nid", "==", nid).get();
+                if (!checkNid.empty) {
+                    Swal.fire('এরর!', 'এই NID নম্বর দিয়ে ইতোমধ্যে আবেদন করা হয়েছে।', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> আবেদন সাবমিট করুন`;
+                    return;
+                }
+
+                // ২. ছবি আপলোড (যদি সিলেক্ট করা থাকে)
+                let profileImageUrl = "";
+                let nidImageUrl = "";
+
+                const profileFile = document.getElementById('profileImage').files[0];
+                const nidFile = document.getElementById('nidImage').files[0];
+
+                if (profileFile) {
+                    const pRef = storage.ref(`workers/profile_${Date.now()}_${profileFile.name}`);
+                    await pRef.put(profileFile);
+                    profileImageUrl = await pRef.getDownloadURL();
+                }
+
+                if (nidFile) {
+                    const nRef = storage.ref(`workers/nid_${Date.now()}_${nidFile.name}`);
+                    await nRef.put(nidFile);
+                    nidImageUrl = await nRef.getDownloadURL();
+                }
+
+                // ৩. ডাটাবেজে সেভ করা
+                await db.collection("workers").add({
+                    fullName: document.getElementById('fullName').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    nid: nid,
+                    category: document.getElementById('category').value,
+                    perTaskCharge: document.getElementById('perTaskCharge').value,
+                    division: document.getElementById('division').value,
+                    district: document.getElementById('district').value,
+                    upazila: document.getElementById('upazila').value,
+                    village: document.getElementById('village').value.trim(),
+                    profileImageUrl: profileImageUrl,
+                    nidImageUrl: nidImageUrl,
+                    status: "pending",
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'আবেদন সফল হয়েছে!',
+                    text: 'আপনার তথ্য যাচাই করে এডমিন প্যানেল থেকে অনুমোদন দেওয়া হবে।',
+                }).then(() => {
+                    window.location.href = "index.html";
+                });
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('ভুল হয়েছে!', error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> আবেদন সাবমিট করুন`;
+            }
+        });
+    </script>
+</body>
+</html>
+
+কোডটি আপনার প্রজেক্টে যুক্ত করে ট্রাই করে দেখতে পারেন। কোন বিষয়ে কনফিউশন থাকলে জানান!
+
+
+Me:- Eita korte ki abar alada file create kora lagbe? 
+Amar index ta bar bar change kortesi jeikhane aektu change korlei onk bug dekha dey 
+Jodio kal rate jeita github ae upload korsi ta ekhn oo change kori nai
+Due to i am not at my pc.
+Ami aeigula sob git hub ae upload kore rakhtesi jate pore aeigula submit kore ekta valo result pete pari.
+
+
+AI:-
+হ্যাঁ, register.html-এর জন্য সম্পূর্ণ আলাদা একটি ফাইল তৈরি করতে হবে।
+এটি আলাদা ফাইলে করার সবচেয়ে বড় সুবিধা হলো, আপনার মূল index.html ফাইলে কোনো হাত দেওয়া লাগবে না। ফলে index.html-এ নতুন করে কোনো বাগ (Bug) তৈরি হওয়ার বা কোড ভেঙে যাওয়ার কোনো ঝুঁকি থাকবে না।
+আলাদা ফাইল ব্যবহার করার মূল সুবিধা:
+১. index.html নিরাপদ থাকবে: ওয়েবসাইট ডেভলপমেন্টের সঠিক নিয়ম হলো একেকটি পেজের জন্য আলাদা ফাইল ব্যবহার করা। index.html থাকবে শুধু হোমপেজ হিসেবে, আর register.html কাজ করবে ফর্ম সাবমিটের জন্য।
+২. বাগ ট্র্যাকিং সহজ হবে: কোনো সমস্যা হলে আপনি নির্দিষ্ট ওই ফাইলেই তা ঠিক করতে পারবেন, যা অন্য কোনো পেজকে প্রভাবিত করবে না।
+৩. গিটহাব প্রজেক্ট ক্লিন থাকবে: গিটহাবে প্রতিটি ফিচারের জন্য আলাদা ফাইল থাকলে প্রজেক্ট স্ট্রাকচার দেখতে পেশাদার লাগে, যা ভালো মার্কস বা রেজাল্ট পেতে সাহায্য করবে।
+পিসিতে ফেরার পর যেভাবে কাজটি করবেন:
+১. আপনার প্রজেক্ট ফোল্ডারে (যেখানে index.html আছে) নতুন একটি ফাইল তৈরি করুন এবং নাম দিন register.html
+২. আগের দেওয়া সম্পূর্ণ কোডটি register.html ফাইলে পেস্ট করে Ctrl + S দিয়ে সেভ করুন।
+৩. index.html-এর "কর্মী হিসেবে যোগ দিন" বাটন বা লিংকে শুধু href="register.html" যুক্ত করে দেবেন।
+৪. এরপর গিটহাবে আপলোড করার জন্য টার্মিনালে নিচের কমান্ডগুলো রান করবেন:
+git add .
+git commit -m "Added register.html for worker registration"
+git push origin main
+
+পিসিতে যাওয়ার পর ফাইলটি সেটআপ করতে বা রান করতে কোনো সমস্যা হলে জানাবেন কি?
+
