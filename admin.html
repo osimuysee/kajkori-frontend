@@ -159,7 +159,7 @@
 
                     total++;
                     if (data.status === 'approved') approved++;
-                    else pending++;
+                    else if (data.status === 'pending') pending++;
                 });
 
                 document.getElementById('statTotal').innerText = total;
@@ -177,7 +177,7 @@
             tableBody.innerHTML = '';
 
             const filteredData = allWorkersList.filter(worker => {
-                if (currentFilter === 'pending') return worker.status !== 'approved';
+                if (currentFilter === 'pending') return worker.status === 'pending';
                 if (currentFilter === 'approved') return worker.status === 'approved';
                 return true;
             });
@@ -196,8 +196,10 @@
                     ? `<button onclick="updateWorkerStatus('${worker.id}', 'pending')" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-3 py-1.5 rounded-lg text-xs transition">বাতিল</button>`
                     : `<button onclick="updateWorkerStatus('${worker.id}', 'approved')" class="bg-green-600 hover:bg-green-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-sm">অনুমোদন</button>`;
 
-                const profilePhoto = worker.profileImageUrl ? `<a href="${worker.profileImageUrl}" target="_blank"><img src="${worker.profileImageUrl}" class="w-8 h-8 rounded-full object-cover border"></a>` : '';
-                const nidDoc = worker.nidDocumentUrl ? `<a href="${worker.nidDocumentUrl}" target="_blank" class="text-blue-600 underline font-bold text-xs"><i class="fa-solid fa-file-image"></i> ডকুমেন্ট দেখুন</a>` : 'N/A';
+                const profileUrl = escapeHtml(worker.profileImageUrl || '');
+                const nidUrl = escapeHtml(worker.nidDocumentUrl || '');
+                const profilePhoto = worker.profileImageUrl ? `<a href="${profileUrl}" target="_blank" rel="noopener"><img src="${profileUrl}" class="w-8 h-8 rounded-full object-cover border"></a>` : '';
+                const nidDoc = worker.nidDocumentUrl ? `<a href="${nidUrl}" target="_blank" rel="noopener" class="text-blue-600 underline font-bold text-xs"><i class="fa-solid fa-file-image"></i> ডকুমেন্ট দেখুন</a>` : 'N/A';
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50 transition";
@@ -205,21 +207,21 @@
                     <td class="p-3 flex items-center gap-2">
                         ${profilePhoto}
                         <div>
-                            <p class="font-bold text-gray-900">${worker.fullName || 'নাম নেই'}</p>
-                            <p class="text-[11px] text-gray-500">${worker.email || 'ইমেইল নেই'}</p>
+                            <p class="font-bold text-gray-900">${escapeHtml(worker.fullName || 'নাম নেই')}</p>
+                            <p class="text-[11px] text-gray-500">${escapeHtml(worker.email || 'ইমেইল নেই')}</p>
                         </div>
                     </td>
-                    <td class="p-3 font-semibold text-gray-700">${worker.phone || 'N/A'}</td>
+                    <td class="p-3 font-semibold text-gray-700">${escapeHtml(worker.phone || 'N/A')}</td>
                     <td class="p-3">
-                        <p class="font-mono font-bold text-gray-800">${worker.nid || 'N/A'}</p>
+                        <p class="font-mono font-bold text-gray-800">${escapeHtml(worker.nid || 'N/A')}</p>
                         ${nidDoc}
                     </td>
                     <td class="p-3">
-                        <span class="font-bold text-blue-700 capitalize">${worker.category || 'N/A'}</span>
-                        <p class="text-[11px] text-gray-600 font-bold">৳ ${worker.perTaskCharge || '0'}</p>
+                        <span class="font-bold text-blue-700 capitalize">${escapeHtml(worker.category || 'N/A')}</span>
+                        <p class="text-[11px] text-gray-600 font-bold">৳ ${escapeHtml(worker.perTaskCharge || '0')}</p>
                     </td>
                     <td class="p-3 text-xs text-gray-600">
-                        ${worker.village ? worker.village + ', ' : ''}${worker.upazila || ''}, ${worker.district || ''}
+                        ${worker.village ? escapeHtml(worker.village) + ', ' : ''}${escapeHtml(worker.upazila || '')}, ${escapeHtml(worker.district || '')}
                     </td>
                     <td class="p-3">${statusBadge}</td>
                     <td class="p-3 text-center">

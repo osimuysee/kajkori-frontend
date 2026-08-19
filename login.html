@@ -124,18 +124,18 @@
         });
 
         // Phone Auth
-        window.addEventListener('DOMContentLoaded', () => {
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-                'size': 'invisible'
-            });
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+            'size': 'invisible'
         });
 
         let confirmationResultObj = null;
         document.getElementById('sendOtpBtn').addEventListener('click', () => {
             const phoneInput = document.getElementById('phoneNumber').value.trim();
-            const phone = sanitizePhoneNumber(phoneInput);
 
-            if(!phoneInput) return alert("নম্বর লিখুন");
+            if (!phoneInput) return alert("নম্বর লিখুন");
+            if (!isValidBdPhoneNumber(phoneInput)) return alert("সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন (যেমন: 017XXXXXXXX)");
+
+            const phone = sanitizePhoneNumber(phoneInput);
 
             auth.signInWithPhoneNumber(phone, window.recaptchaVerifier)
                 .then(result => {
