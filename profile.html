@@ -1,32 +1,117 @@
-<div class="profile-container">
-    <div class="profile-card">
-        <!-- প্রোফাইল পিকচার ও স্ট্যাটাস -->
-        <div class="profile-header">
-            <div class="avatar-box">
-                <!-- জিমেইল বা ইউজারের ছবি এখানে অটো শো করবে -->
-                <img id="user-avatar" src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-img">
-                <span class="online-dot"></span>
-            </div>
-            <h2 id="user-name">লোডিং...</h2>
-            <p id="user-email" class="user-email">email@example.com</p>
-        </div>
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KajKori - প্রোফাইল</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
 
-        <!-- ইউজারের জাবতীয় তথ্য ও কন্টেন্ট দেখার সেকশন -->
-        <div class="profile-body">
-            <h3>আপনার কার্যক্রম ও তথ্য</h3>
-            <div class="info-list" id="user-activity-list">
-                <!-- ডায়নামিকভাবে ইউজারের সাবমিট করা ডাটা বা হিস্ট্রি এখানে দেখাবে -->
-                <div class="info-item">
-                    <span>জয়েনিং স্ট্যাটাস:</span>
-                    <span class="highlight">অ্যাক্টিভ মেম্বার</span>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+<header class="bg-white shadow-md border-b">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="index.html" class="text-2xl font-bold text-blue-700 flex items-center gap-2">
+            <i class="fa-solid fa-briefcase text-orange-500"></i> কাজকরি (KajKori)
+        </a>
+        <a href="index.html" class="text-gray-700 hover:text-blue-700 font-bold text-sm px-3 py-2 rounded-lg border border-gray-200">
+            <i class="fa-solid fa-house text-blue-600"></i> হোম
+        </a>
+    </div>
+</header>
+
+<main class="flex-grow py-10 px-4">
+    <div class="profile-container max-w-md mx-auto">
+        <div class="profile-card bg-white rounded-2xl shadow-xl border p-6">
+            <!-- প্রোফাইল পিকচার ও স্ট্যাটাস -->
+            <div class="profile-header text-center">
+                <div class="avatar-box relative inline-block">
+                    <!-- জিমেইল বা ইউজারের ছবি এখানে অটো শো করবে -->
+                    <img id="user-avatar" src="https://via.placeholder.com/150" alt="Profile Picture" class="profile-img w-28 h-28 rounded-full object-cover border mx-auto">
+                    <span class="online-dot absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></span>
                 </div>
-                <div class="info-item">
-                    <span>সংরক্ষিত আইটেম:</span>
-                    <span id="saved-items-count">০টি</span>
-                </div>
+                <h2 id="user-name" class="text-xl font-bold mt-3">লোডিং...</h2>
+                <p id="user-email" class="user-email text-sm text-gray-500">email@example.com</p>
             </div>
-            
-            <button id="logout-btn" class="logout-btn">লগআউট করুন</button>
+
+            <!-- ইউজারের জাবতীয় তথ্য ও কন্টেন্ট দেখার সেকশন -->
+            <div class="profile-body mt-6 border-t pt-4">
+                <h3 class="font-bold text-gray-800 mb-3">আপনার কার্যক্রম ও তথ্য</h3>
+                <div class="info-list space-y-2" id="user-activity-list">
+                    <!-- ডায়নামিকভাবে ইউজারের সাবমিট করা ডাটা বা হিস্ট্রি এখানে দেখাবে -->
+                    <div class="info-item flex justify-between text-sm">
+                        <span>জয়েনিং স্ট্যাটাস:</span>
+                        <span id="member-status" class="highlight font-bold text-blue-700">লোডিং...</span>
+                    </div>
+                    <div class="info-item flex justify-between text-sm">
+                        <span>সংরক্ষিত আইটেম:</span>
+                        <span id="saved-items-count">০টি</span>
+                    </div>
+                </div>
+
+                <button id="logout-btn" class="logout-btn w-full mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg text-sm transition">লগআউট করুন</button>
+            </div>
         </div>
     </div>
-</div>
+</main>
+
+<script src="script.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCXD9-SYAqnmatYe81M9wBeSB4wjJGFAZQ",
+        authDomain: "kajkori-8a07e.firebaseapp.com",
+        databaseURL: "https://kajkori-8a07e-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "kajkori-8a07e",
+        storageBucket: "kajkori-8a07e.firebasestorage.app",
+        messagingSenderId: "594029245687",
+        appId: "1:594029245687:web:d2364820ce6be9d4104ff2"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(async user => {
+        if (!user) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        document.getElementById('user-name').innerText = user.displayName || user.email || user.phoneNumber || "ইউজার";
+        document.getElementById('user-email').innerText = user.email || user.phoneNumber || "";
+        if (user.photoURL) document.getElementById('user-avatar').src = user.photoURL;
+
+        const statusEl = document.getElementById('member-status');
+        try {
+            const doc = await db.collection("workers").doc(user.uid).get();
+            if (!doc.exists) {
+                statusEl.innerText = "সাধারণ ইউজার";
+                return;
+            }
+
+            const worker = doc.data();
+            if (worker.profileImageUrl) document.getElementById('user-avatar').src = worker.profileImageUrl;
+            if (worker.fullName) document.getElementById('user-name').innerText = worker.fullName;
+            statusEl.innerText = worker.status === 'approved' ? "অ্যাক্টিভ মেম্বার" : "অনুমোদনের অপেক্ষায়";
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "তথ্য আনা যায়নি";
+        }
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        auth.signOut().then(() => window.location.href = "index.html");
+    });
+</script>
+</body>
+</html>

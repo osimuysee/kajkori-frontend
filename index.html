@@ -41,8 +41,8 @@
                 </div>
 
                 <!-- লগইন অবস্থায় দেখাবে -->
-                <div id="loggedInNav" class="hidden flex items-center gap-2">
-                    <span id="userDisplayName" class="text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg"></span>
+                <div id="loggedInNav" class="hidden items-center gap-2">
+                    <a href="profile.html" class="text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg hover:bg-blue-100" id="userDisplayName"></a>
                     <button onclick="logoutUser()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-sm px-3 py-2 rounded-lg transition shadow-sm flex items-center gap-1">
                         <i class="fa-solid fa-right-from-bracket"></i> লগআউট
                     </button>
@@ -141,6 +141,7 @@
         <p>© ২০২৬ KajKori. সর্বস্বত্ব সংরক্ষিত।</p>
     </footer>
 
+    <script src="locations.js"></script>
     <script src="script.js"></script>
     <script>
         const firebaseConfig = {
@@ -169,6 +170,7 @@
 
             if (user) {
                 if (loggedOutNav) loggedOutNav.classList.add('hidden');
+                if (loggedInNav) loggedInNav.classList.add('flex');
                 if (loggedInNav) loggedInNav.classList.remove('hidden');
                 if (userDisplayName) userDisplayName.innerText = user.displayName || user.email || user.phoneNumber || "ইউজার";
 
@@ -180,6 +182,7 @@
                 }
             } else {
                 if (loggedOutNav) loggedOutNav.classList.remove('hidden');
+                if (loggedInNav) loggedInNav.classList.remove('flex');
                 if (loggedInNav) loggedInNav.classList.add('hidden');
                 if (adminNavBtn) adminNavBtn.classList.add('hidden');
             }
@@ -199,6 +202,7 @@
             const division = document.getElementById('division').value;
             const district = document.getElementById('district').value;
             const upazila = document.getElementById('upazila').value;
+            const village = document.getElementById('village').value.trim().toLowerCase();
             const keyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
 
             const resultsSection = document.getElementById('resultsSection');
@@ -226,23 +230,28 @@
                         return;
                     }
 
+                    if (village && !(worker.village || '').toLowerCase().includes(village)) {
+                        return;
+                    }
+
                     count++;
-                    const photo = worker.profileImageUrl || 'https://via.placeholder.com/150';
+                    const photo = escapeHtml(worker.profileImageUrl || 'https://via.placeholder.com/150');
+                    const phone = escapeHtml(worker.phone || '');
                     resultsGrid.innerHTML += `
                         <div class="bg-white p-5 rounded-xl border shadow-sm hover:shadow-md transition flex flex-col justify-between">
                             <div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <img src="${photo}" class="w-14 h-14 rounded-full object-cover border" alt="Profile">
                                     <div>
-                                        <h3 class="font-bold text-base text-gray-900">${worker.fullName || 'নাম নেই'}</h3>
-                                        <span class="bg-blue-100 text-blue-800 text-[11px] px-2 py-0.5 rounded font-bold capitalize">${worker.category || 'N/A'}</span>
+                                        <h3 class="font-bold text-base text-gray-900">${escapeHtml(worker.fullName || 'নাম নেই')}</h3>
+                                        <span class="bg-blue-100 text-blue-800 text-[11px] px-2 py-0.5 rounded font-bold capitalize">${escapeHtml(worker.category || 'N/A')}</span>
                                     </div>
                                 </div>
-                                <p class="text-xs text-gray-600 mb-1"><i class="fa-solid fa-location-dot text-red-500"></i> ${worker.village ? worker.village + ', ' : ''}${worker.upazila || ''}, ${worker.district || ''}</p>
-                                <p class="text-xs font-bold text-green-600 mb-4">চার্জ: ৳ ${worker.perTaskCharge || '০'}</p>
+                                <p class="text-xs text-gray-600 mb-1"><i class="fa-solid fa-location-dot text-red-500"></i> ${worker.village ? escapeHtml(worker.village) + ', ' : ''}${escapeHtml(worker.upazila || '')}, ${escapeHtml(worker.district || '')}</p>
+                                <p class="text-xs font-bold text-green-600 mb-4">চার্জ: ৳ ${escapeHtml(worker.perTaskCharge || '০')}</p>
                             </div>
-                            <a href="tel:${worker.phone}" class="block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm transition">
-                                <i class="fa-solid fa-phone"></i> ${worker.phone}
+                            <a href="tel:${phone}" class="block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded-lg text-sm transition">
+                                <i class="fa-solid fa-phone"></i> ${phone}
                             </a>
                         </div>
                     `;

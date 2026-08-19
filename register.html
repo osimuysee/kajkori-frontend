@@ -71,6 +71,7 @@
                             <option value="ac_repair">❄️ এসি সার্ভিসিং</option>
                             <option value="painter">🎨 রং মিস্ত্রি</option>
                             <option value="carpenter">🪑 কাঠ মিস্ত্রি</option>
+                            <option value="tiles_mason">🧱 রাজমিস্ত্রি / টাইলস মিস্ত্রি</option>
                             <option value="cleaner">🧹 পরিচ্ছন্নতা কর্মী</option>
                             <option value="cook">🍳 বাবুর্চি</option>
                             <option value="driver">🚗 ড্রাইভার</option>
@@ -155,6 +156,7 @@
         <p>© ২০২৬ KajKori. সর্বস্বত্ব সংরক্ষিত।</p>
     </footer>
 
+    <script src="locations.js"></script>
     <script src="script.js"></script>
     <script>
         const firebaseConfig = {
@@ -184,6 +186,12 @@
             }
 
             const rawPhone = document.getElementById('phone').value.trim();
+
+            if (!isValidBdPhoneNumber(rawPhone)) {
+                alert("সঠিক বাংলাদেশি মোবাইল নম্বর লিখুন (যেমন: 017XXXXXXXX)");
+                return;
+            }
+
             const formattedPhone = sanitizePhoneNumber(rawPhone);
             const nidNumber = document.getElementById('nid').value.trim();
             const email = document.getElementById('email').value.trim();
@@ -228,16 +236,16 @@
                 // ৪. Firestore-এ সেভ
                 await db.collection("workers").doc(uid).set({
                     uid: uid,
-                    fullName: document.getElementById('fullName').value,
+                    fullName: document.getElementById('fullName').value.trim(),
                     phone: formattedPhone,
                     email: email,
                     nid: nidNumber,
                     category: document.getElementById('workerCategory').value,
-                    perTaskCharge: document.getElementById('perTaskCharge').value,
+                    perTaskCharge: Number(document.getElementById('perTaskCharge').value),
                     division: document.getElementById('regDivision').value,
                     district: document.getElementById('regDistrict').value,
                     upazila: document.getElementById('regUpazila').value,
-                    village: document.getElementById('regVillage').value,
+                    village: document.getElementById('regVillage').value.trim(),
                     profileImageUrl: profileImageUrl,
                     nidDocumentUrl: nidDocumentUrl,
                     status: "pending",
